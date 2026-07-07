@@ -6,7 +6,7 @@
 /*   By: harleyng <harleyng@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/19 14:17:52 by harleyng          #+#    #+#             */
-/*   Updated: 2025/06/11 15:24:23 by harleyng         ###   ########.fr       */
+/*   Updated: 2025/06/11 20:32:45 by harleyng         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -65,7 +65,6 @@ static void	exec_command_with_env(char *cmd_path, t_cmd_tbl *table,
 void	execute_command(t_cmd_tbl *table, t_shell *shell)
 {
 	char	*cmd_path;
-	char	*path_env;
 
 	if (table->cmd == NULL)
 		child_exit(shell);
@@ -75,13 +74,6 @@ void	execute_command(t_cmd_tbl *table, t_shell *shell)
 		exec_command_with_env(table->cmd, table, shell);
 	else if (table->cmd[0] != '.' && table->cmd[0] != '/')
 	{
-		path_env = get_env_value(shell->env, "PATH");
-		if (!path_env || path_env[0] == '\0')
-		{
-			if (shell->print == TRUE)
-				p_err("%s%s: command not found\n", SHELL, table->cmd);
-			child_exit(shell);
-		}
 		cmd_path = extract_path(shell, table->cmd);
 		if (cmd_path == NULL)
 			clear_and_exit(shell, cmd_path, table);

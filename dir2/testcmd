@@ -1,0 +1,1 @@
+-e #!/bin/sh\necho "From dir1" echo -e #!/bin/sh\necho "From dir2" chmod +x dir1/testcmd dir2/testcmd

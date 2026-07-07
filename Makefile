@@ -1,4 +1,5 @@
 CC				= cc
+# SRC_DIR			= source/
 MIN_DIR			= minishell_source/
 EXE_DIR			= execution/
 PAR_DIR			= parsing/
@@ -7,8 +8,10 @@ RM				= rm -rf
 NAME			= minishell
 DN				= > /dev/null
 LIBFT			= libft/libft.a
+OS				= $(shell uname)
 USER			= $(shell whoami)
-CFLAGS			= -Wall -Werror -Wextra 
+SLEEP			= $(shell sleep 2)
+CFLAGS			= -Wall -Werror -Wextra
 # INSTALL_READL	= $(shell brew install readline)
 
 #DELETE THE PRINT FUNCTIONS FILE
@@ -84,35 +87,70 @@ GENERAL_UTILS	= general_utils/error \
 SOURCE			= $(MAIN) $(INIT) $(SIGNALS) $(EXPANDER) $(LEXER) $(PARSER) \
 				  $(EXECUTOR) $(BUILTINS) $(GENERAL_UTILS) $(CLEANUP_TOOLS) \
 
+
+
+
+# SRC				= $(addprefix $(SRC_DIR), $(addsuffix .c, $(SOURCE)))
 MIN				= $(addprefix $(MIN_DIR), $(addsuffix .c, $(SOURCE)))
 EXE				= $(addprefix $(EXE_DIR), $(addsuffix .c, $(SOURCE)))
 PAR				= $(addprefix $(PAR_DIR), $(addsuffix .c, $(SOURCE)))
 SRC				= $(addprefix $(SRC_DIR), $(addsuffix .c, $(SOURCE)))
 OBJ				= $(addprefix $(OBJ_DIR), $(addsuffix .o, $(SOURCE)))
-# -I /home/linuxbrew/.linuxbrew/opt/readline/include/readline
-# INCL_RDL_HEADER	= 
-# INCL_RDL_LIB	= -I $(shell brew --prefix readline)
 
-run: all
+ifeq ($(OS), Linux)
+INCL_RDL_HEADER	= -I /home/linuxbrew/.linuxbrew/opt/readline/include/readline
+INCL_RDL_LIB	= -lreadline -L /home/linuxbrew/.linuxbrew/opt/readline/lib
+else
+READLINE_PATH := $(shell brew --prefix readline)
+INCL_RDL_HEADER = -I $(READLINE_PATH)/include
+INCL_RDL_LIB = -L $(READLINE_PATH)/lib -lreadline
+endif
+
+BREW			= /Users/$(USER)/.brew/bin
+READLINE		= /Users/$(USER)/.brew/opt/readline/include/readline
+
+run: brew_check
+
+brew_check:
+	@if [ -d $(BREW) ]; then \
+		echo "$(GREEN)BREW is already installed in $(BREW)$(DEF_COLOR)"; \
+	else \
+		{ \
+			echo "$(YELLOW)Installing Homebrew...$(DEF_COLOR)"; \
+			curl -fsSL https://rawgit.com/kube/42homebrew/master/install.sh | zsh; \
+		}; \
+	fi
+	@$(MAKE) readline_check
+
+readline_check:
+	@if [ -d $(READLINE) ]; then \
+		echo "$(GREEN)READLINE is already installed in $(READLINE)$(DEF_COLOR)"; \
+	else \
+		{ \
+			echo "$(YELLOW)Installing Readline...$(DEF_COLOR)"; \
+			$(INSTALL_READL) \
+		}; \
+	fi
+	@$(MAKE) all
 
 
 all: $(NAME)
 
 $(NAME): $(LIBFT) $(OBJ)
-	@$(CC) $(CFLAGS) -g -lreadline $(OBJ) $(LIBFT) -o minishell $(DN)
+	@$(CC) $(CFLAGS) -g -fsanitize=address $(OBJ) $(INCL_RDL_LIB) $(LIBFT) -o minishell $(DN)
 	@cd obj/general_utils && touch user.txt && echo $$USER > user.txt
 
 $(OBJ_DIR)%.o : $(EXE_DIR)%.c
 	@mkdir -p $(@D)
-	@$(CC) -c $< -o $@  $(DN) 
+	@$(CC) $(INCL_RDL_HEADER) -c $< -o $@ $(DN)
 
 $(OBJ_DIR)%.o : $(PAR_DIR)%.c
 	@mkdir -p $(@D)
-	@$(CC) -c $< -o  $@ $(DN) 
+	@$(CC) $(INCL_RDL_HEADER) -c $< -o $@ $(DN)
 
 $(OBJ_DIR)%.o : $(MIN_DIR)%.c
 	@mkdir -p $(@D)
-	@$(CC) -c $< -o $@ $(DN) 
+	@$(CC) $(INCL_RDL_HEADER) -c $< -o $@ $(DN)
 
 $(LIBFT):
 	@echo "$(YELLOW)Compiling: $(DEF_COLOR)$(CYAN)LIBFT. $(DEF_COLOR)"
@@ -155,4 +193,4 @@ GREEN = \033[4;92m
 CYAN2 = \x1B[1;36m
 CYAN = \033[1;96m
 
-.PHONY: all clean fclean re run r
+.PHONY: brew_check readline_check all clean fclean re run r v vm vf ne tester rt
